@@ -1,14 +1,9 @@
 import customtkinter as ctk
-import sqlite3
-from pathlib import Path
 
-
-# ============================================================
-# DATABASE
-# ============================================================
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATABASE_PATH = PROJECT_ROOT / "siwes_management.db"
+from database.database import (
+    get_connection,
+    setup_database
+)
 
 
 # ============================================================
@@ -39,10 +34,20 @@ ERROR = "#DC2626"
 
 class Dashboard:
 
-    def __init__(self, user, logout_callback=None):
+    def __init__(
+        self,
+        user,
+        logout_callback=None
+    ):
 
         self.user = user
         self.logout_callback = logout_callback
+
+        # Controls whether My Information is in edit mode
+        self.editing_information = False
+
+        # Make sure the shared database is ready
+        setup_database()
 
         self.app = ctk.CTkToplevel()
 
@@ -109,7 +114,7 @@ class Dashboard:
             )
         ).capitalize()
 
-        user_label = ctk.CTkLabel(
+        self.user_label = ctk.CTkLabel(
             self.sidebar,
             text=(
                 f"{self.user.get('full_name', 'User')}\n"
@@ -121,7 +126,7 @@ class Dashboard:
             text_color="#D7E5F5"
         )
 
-        user_label.pack(
+        self.user_label.pack(
             padx=20,
             pady=(0, 30)
         )
@@ -247,6 +252,8 @@ class Dashboard:
 
         if page_name == "My Information":
 
+            self.editing_information = False
+
             self.show_student_information()
 
         else:
@@ -259,7 +266,10 @@ class Dashboard:
     # GENERAL PLACEHOLDER
     # ========================================================
 
-    def show_placeholder(self, page_name):
+    def show_placeholder(
+        self,
+        page_name
+    ):
 
         title = ctk.CTkLabel(
             self.main_area,
@@ -324,7 +334,7 @@ class Dashboard:
         )
 
     # ========================================================
-    # STUDENT INFORMATION
+    # STUDENT INFORMATION PAGE
     # ========================================================
 
     def show_student_information(self):
@@ -342,14 +352,14 @@ class Dashboard:
         title.pack(
             anchor="w",
             padx=40,
-            pady=(30, 5)
+            pady=(25, 5)
         )
 
         subtitle = ctk.CTkLabel(
             self.main_area,
             text=(
-                "View and update your SIWES "
-                "student information."
+                "View and manage your personal "
+                "and school information."
             ),
             font=ctk.CTkFont(
                 size=14
@@ -360,12 +370,74 @@ class Dashboard:
         subtitle.pack(
             anchor="w",
             padx=40,
-            pady=(0, 20)
+            pady=(0, 12)
         )
 
-        # ----------------------------------------------------
+        # ====================================================
+        # ACTION BUTTONS
+        # ====================================================
+
+        button_bar = ctk.CTkFrame(
+            self.main_area,
+            fg_color="transparent"
+        )
+
+        button_bar.pack(
+            fill="x",
+            padx=40,
+            pady=(0, 10)
+        )
+
+        if not self.editing_information:
+
+            edit_button = ctk.CTkButton(
+                button_bar,
+                text="Edit Information",
+                width=160,
+                height=40,
+                fg_color=BLUE,
+                hover_color=BLUE_HOVER,
+                command=self.enable_information_editing
+            )
+
+            edit_button.pack(
+                side="right"
+            )
+
+        else:
+
+            save_button = ctk.CTkButton(
+                button_bar,
+                text="Save Changes",
+                width=150,
+                height=40,
+                fg_color=SUCCESS,
+                hover_color="#15803D",
+                command=self.save_student_information
+            )
+
+            save_button.pack(
+                side="right",
+                padx=(8, 0)
+            )
+
+            cancel_button = ctk.CTkButton(
+                button_bar,
+                text="Cancel",
+                width=100,
+                height=40,
+                fg_color="#64748B",
+                hover_color="#475569",
+                command=self.cancel_information_edit
+            )
+
+            cancel_button.pack(
+                side="right"
+            )
+
+        # ====================================================
         # FORM CONTAINER
-        # ----------------------------------------------------
+        # ====================================================
 
         form = ctk.CTkScrollableFrame(
             self.main_area,
@@ -375,7 +447,7 @@ class Dashboard:
 
         form.pack(
             padx=40,
-            pady=10,
+            pady=5,
             fill="both",
             expand=True
         )
@@ -390,95 +462,186 @@ class Dashboard:
             weight=1
         )
 
-        # ----------------------------------------------------
-        # INPUTS
-        # ----------------------------------------------------
+        # ====================================================
+        # PERSONAL INFORMATION
+        # ====================================================
+
+        personal_title = ctk.CTkLabel(
+            form,
+            text="Personal Information",
+            font=ctk.CTkFont(
+                size=20,
+                weight="bold"
+            ),
+            text_color=TEXT
+        )
+
+        personal_title.grid(
+            row=0,
+            column=0,
+            columnspan=2,
+            sticky="w",
+            padx=25,
+            pady=(20, 5)
+        )
+
+        personal_subtitle = ctk.CTkLabel(
+            form,
+            text=(
+                "Basic contact and identity information."
+            ),
+            font=ctk.CTkFont(
+                size=13
+            ),
+            text_color=TEXT_LIGHT
+        )
+
+        personal_subtitle.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="w",
+            padx=25,
+            pady=(0, 10)
+        )
 
         self.info_full_name = self.create_form_input(
             form,
             "Full Name",
-            0,
+            2,
             0
         )
 
         self.info_email = self.create_form_input(
             form,
             "Email",
-            0,
+            2,
             1
         )
 
         self.info_phone = self.create_form_input(
             form,
             "Phone Number",
-            1,
+            3,
             0
+        )
+
+        self.info_student_id = self.create_form_input(
+            form,
+            "Student / Matric Number",
+            3,
+            1
+        )
+
+        # ====================================================
+        # SCHOOL INFORMATION
+        # ====================================================
+
+        school_title = ctk.CTkLabel(
+            form,
+            text="School Information",
+            font=ctk.CTkFont(
+                size=20,
+                weight="bold"
+            ),
+            text_color=TEXT
+        )
+
+        school_title.grid(
+            row=4,
+            column=0,
+            columnspan=2,
+            sticky="w",
+            padx=25,
+            pady=(25, 5)
+        )
+
+        school_subtitle = ctk.CTkLabel(
+            form,
+            text=(
+                "Academic information used "
+                "throughout the SIWES system."
+            ),
+            font=ctk.CTkFont(
+                size=13
+            ),
+            text_color=TEXT_LIGHT
+        )
+
+        school_subtitle.grid(
+            row=5,
+            column=0,
+            columnspan=2,
+            sticky="w",
+            padx=25,
+            pady=(0, 10)
+        )
+
+        self.info_institution = self.create_form_input(
+            form,
+            "School / Institution",
+            6,
+            0
+        )
+
+        self.info_faculty = self.create_form_input(
+            form,
+            "Faculty",
+            6,
+            1
         )
 
         self.info_department = self.create_form_input(
             form,
             "Department",
-            1,
+            7,
+            0
+        )
+
+        self.info_programme = self.create_form_input(
+            form,
+            "Programme / Course",
+            7,
             1
         )
 
         self.info_level = self.create_form_input(
             form,
             "Level",
-            2,
+            8,
             0
         )
 
-        # ----------------------------------------------------
+        self.info_session = self.create_form_input(
+            form,
+            "Academic Session",
+            8,
+            1
+        )
+
+        # ====================================================
         # STATUS
-        # ----------------------------------------------------
+        # ====================================================
 
         self.info_status = ctk.CTkLabel(
             form,
             text="",
             font=ctk.CTkFont(
                 size=13
-            )
+            ),
+            text_color=TEXT_LIGHT
         )
 
         self.info_status.grid(
-            row=3,
+            row=9,
             column=0,
             columnspan=2,
             sticky="w",
             padx=25,
-            pady=(20, 10)
+            pady=(20, 30)
         )
 
-        # ----------------------------------------------------
-        # SAVE BUTTON
-        # ----------------------------------------------------
-
-        save_button = ctk.CTkButton(
-            form,
-            text="Save Information",
-            height=45,
-            fg_color=BLUE,
-            hover_color=BLUE_HOVER,
-            font=ctk.CTkFont(
-                size=14,
-                weight="bold"
-            ),
-            command=self.save_student_information
-        )
-
-        save_button.grid(
-            row=4,
-            column=0,
-            columnspan=2,
-            sticky="w",
-            padx=25,
-            pady=(5, 30)
-        )
-
-        # ----------------------------------------------------
-        # LOAD DATA
-        # ----------------------------------------------------
+        # Load existing information
 
         self.load_student_information()
 
@@ -504,7 +667,7 @@ class Dashboard:
             column=column,
             sticky="ew",
             padx=25,
-            pady=12
+            pady=8
         )
 
         label = ctk.CTkLabel(
@@ -525,7 +688,9 @@ class Dashboard:
         entry = ctk.CTkEntry(
             frame,
             height=45,
-            fg_color=INPUT_BG,
+            fg_color=WHITE,
+            text_color=TEXT,
+            placeholder_text_color="#94A3B8",
             border_color=BORDER,
             border_width=1,
             corner_radius=8
@@ -538,6 +703,60 @@ class Dashboard:
         return entry
 
     # ========================================================
+    # EDIT MODE
+    # ========================================================
+
+    def set_information_editable(
+        self,
+        editable
+    ):
+
+        state = (
+            "normal"
+            if editable
+            else "disabled"
+        )
+
+        entries = [
+            self.info_full_name,
+            self.info_email,
+            self.info_phone,
+            self.info_student_id,
+            self.info_institution,
+            self.info_faculty,
+            self.info_department,
+            self.info_programme,
+            self.info_level,
+            self.info_session
+        ]
+
+        for entry in entries:
+
+            entry.configure(
+                state=state,
+                fg_color=(
+                    WHITE
+                    if editable
+                    else INPUT_BG
+                )
+            )
+
+    def enable_information_editing(self):
+
+        # Rebuild the page in edit mode
+        self.editing_information = True
+
+        self.show_student_information()
+
+    def cancel_information_edit(self):
+
+        # Return to view mode and reload
+        # the saved information from the database.
+        self.editing_information = False
+
+        self.show_student_information()
+
+    # ========================================================
     # GET USER EMAIL
     # ========================================================
 
@@ -547,9 +766,7 @@ class Dashboard:
 
         try:
 
-            connection = sqlite3.connect(
-                DATABASE_PATH
-            )
+            connection = get_connection()
 
             cursor = connection.cursor()
 
@@ -571,7 +788,7 @@ class Dashboard:
 
                 return result[0]
 
-        except sqlite3.Error as error:
+        except Exception as error:
 
             print(
                 f"Error getting email: {error}"
@@ -603,31 +820,19 @@ class Dashboard:
                 text_color=ERROR
             )
 
+            self.set_information_editable(
+                self.editing_information
+            )
+
             return
 
         connection = None
 
         try:
 
-            connection = sqlite3.connect(
-                DATABASE_PATH
-            )
+            connection = get_connection()
 
             cursor = connection.cursor()
-
-            # Make sure students table exists
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS students (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    full_name TEXT NOT NULL,
-                    email TEXT UNIQUE NOT NULL,
-                    phone TEXT,
-                    department TEXT NOT NULL,
-                    level TEXT NOT NULL
-                )
-                """
-            )
 
             cursor.execute(
                 """
@@ -635,8 +840,13 @@ class Dashboard:
                     full_name,
                     email,
                     phone,
+                    student_id_number,
+                    institution,
+                    faculty,
                     department,
-                    level
+                    programme,
+                    level,
+                    academic_session
                 FROM students
                 WHERE email = ?
                 LIMIT 1
@@ -650,41 +860,79 @@ class Dashboard:
 
             if student:
 
-                full_name, email, phone, department, level = student
+                (
+                    full_name,
+                    student_email,
+                    phone,
+                    student_id_number,
+                    institution,
+                    faculty,
+                    department,
+                    programme,
+                    level,
+                    academic_session
+                ) = student
 
-                self.info_full_name.insert(
-                    0,
-                    full_name or ""
-                )
+                values = [
+                    (
+                        self.info_full_name,
+                        full_name
+                    ),
+                    (
+                        self.info_email,
+                        student_email
+                    ),
+                    (
+                        self.info_phone,
+                        phone
+                    ),
+                    (
+                        self.info_student_id,
+                        student_id_number
+                    ),
+                    (
+                        self.info_institution,
+                        institution
+                    ),
+                    (
+                        self.info_faculty,
+                        faculty
+                    ),
+                    (
+                        self.info_department,
+                        department
+                    ),
+                    (
+                        self.info_programme,
+                        programme
+                    ),
+                    (
+                        self.info_level,
+                        level
+                    ),
+                    (
+                        self.info_session,
+                        academic_session
+                    )
+                ]
 
-                self.info_email.insert(
-                    0,
-                    email or ""
-                )
+                for entry, value in values:
 
-                self.info_phone.insert(
-                    0,
-                    phone or ""
-                )
-
-                self.info_department.insert(
-                    0,
-                    department or ""
-                )
-
-                self.info_level.insert(
-                    0,
-                    level or ""
-                )
+                    entry.insert(
+                        0,
+                        value or ""
+                    )
 
                 self.info_status.configure(
-                    text="Your information has been loaded.",
+                    text=(
+                        "Your information "
+                        "has been loaded."
+                    ),
                     text_color=SUCCESS
                 )
 
             else:
 
-                # New student profile
                 self.info_full_name.insert(
                     0,
                     self.user.get(
@@ -701,12 +949,13 @@ class Dashboard:
                 self.info_status.configure(
                     text=(
                         "No student profile found. "
-                        "Enter your details and save."
+                        "Complete your information "
+                        "and save."
                     ),
                     text_color=TEXT_LIGHT
                 )
 
-        except sqlite3.Error as error:
+        except Exception as error:
 
             self.info_status.configure(
                 text=(
@@ -726,6 +975,10 @@ class Dashboard:
 
                 connection.close()
 
+        self.set_information_editable(
+            self.editing_information
+        )
+
     # ========================================================
     # SAVE STUDENT INFORMATION
     # ========================================================
@@ -744,17 +997,37 @@ class Dashboard:
             self.info_phone.get().strip()
         )
 
+        student_id_number = (
+            self.info_student_id.get().strip()
+        )
+
+        institution = (
+            self.info_institution.get().strip()
+        )
+
+        faculty = (
+            self.info_faculty.get().strip()
+        )
+
         department = (
             self.info_department.get().strip()
+        )
+
+        programme = (
+            self.info_programme.get().strip()
         )
 
         level = (
             self.info_level.get().strip()
         )
 
-        # ----------------------------------------------------
+        academic_session = (
+            self.info_session.get().strip()
+        )
+
+        # ====================================================
         # VALIDATION
-        # ----------------------------------------------------
+        # ====================================================
 
         if not full_name:
 
@@ -796,27 +1069,18 @@ class Dashboard:
 
         try:
 
-            connection = sqlite3.connect(
-                DATABASE_PATH
-            )
+            connection = get_connection()
 
             cursor = connection.cursor()
 
-            # Make sure table exists
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS students (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    full_name TEXT NOT NULL,
-                    email TEXT UNIQUE NOT NULL,
-                    phone TEXT,
-                    department TEXT NOT NULL,
-                    level TEXT NOT NULL
-                )
-                """
+            current_email = (
+                self.get_user_email()
             )
 
-            # Check whether profile exists
+            # ------------------------------------------------
+            # Find existing student profile
+            # ------------------------------------------------
+
             cursor.execute(
                 """
                 SELECT id
@@ -825,11 +1089,15 @@ class Dashboard:
                 LIMIT 1
                 """,
                 (
-                    email,
+                    current_email,
                 )
             )
 
             existing = cursor.fetchone()
+
+            # ------------------------------------------------
+            # UPDATE
+            # ------------------------------------------------
 
             if existing:
 
@@ -838,19 +1106,35 @@ class Dashboard:
                     UPDATE students
                     SET
                         full_name = ?,
+                        email = ?,
                         phone = ?,
+                        student_id_number = ?,
+                        institution = ?,
+                        faculty = ?,
                         department = ?,
-                        level = ?
-                    WHERE email = ?
+                        programme = ?,
+                        level = ?,
+                        academic_session = ?
+                    WHERE id = ?
                     """,
                     (
                         full_name,
+                        email,
                         phone,
+                        student_id_number,
+                        institution,
+                        faculty,
                         department,
+                        programme,
                         level,
-                        email
+                        academic_session,
+                        existing[0]
                     )
                 )
+
+            # ------------------------------------------------
+            # INSERT
+            # ------------------------------------------------
 
             else:
 
@@ -860,21 +1144,72 @@ class Dashboard:
                         full_name,
                         email,
                         phone,
+                        student_id_number,
+                        institution,
+                        faculty,
                         department,
-                        level
+                        programme,
+                        level,
+                        academic_session
                     )
-                    VALUES (?, ?, ?, ?, ?)
+                    VALUES (
+                        ?, ?, ?, ?, ?, ?,
+                        ?, ?, ?, ?
+                    )
                     """,
                     (
                         full_name,
                         email,
                         phone,
+                        student_id_number,
+                        institution,
+                        faculty,
                         department,
-                        level
+                        programme,
+                        level,
+                        academic_session
                     )
                 )
 
+            # ------------------------------------------------
+            # Keep the login user's name/email synchronized
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
+                UPDATE users
+                SET
+                    full_name = ?,
+                    email = ?
+                WHERE id = ?
+                """,
+                (
+                    full_name,
+                    email,
+                    self.user["id"]
+                )
+            )
+
             connection.commit()
+
+            # Update local user object
+            self.user["full_name"] = full_name
+            self.user["email"] = email
+
+            # Update sidebar
+            role = str(
+                self.user.get(
+                    "role",
+                    "student"
+                )
+            ).capitalize()
+
+            self.user_label.configure(
+                text=(
+                    f"{full_name}\n"
+                    f"{role}"
+                )
+            )
 
             self.info_status.configure(
                 text=(
@@ -884,20 +1219,25 @@ class Dashboard:
                 text_color=SUCCESS
             )
 
-            # Update sidebar name
-            self.user["full_name"] = full_name
+            # Return to view mode
+            self.editing_information = False
 
-        except sqlite3.IntegrityError:
+            # Rebuild page so Edit Information appears again
+            self.show_student_information()
 
             self.info_status.configure(
                 text=(
-                    "That email already belongs "
-                    "to another student."
+                    "Student information "
+                    "saved successfully."
                 ),
-                text_color=ERROR
+                text_color=SUCCESS
             )
 
-        except sqlite3.Error as error:
+        except Exception as error:
+
+            if connection:
+
+                connection.rollback()
 
             self.info_status.configure(
                 text=(
