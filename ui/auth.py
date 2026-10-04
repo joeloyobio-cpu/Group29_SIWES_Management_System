@@ -1,24 +1,10 @@
 import customtkinter as ctk
-import sqlite3
 import hashlib
 import os
 import re
-from pathlib import Path
 
-from dashboard import Dashboard
-
-
-# ============================================================
-# DATABASE PATH
-# ============================================================
-
-PROJECT_ROOT = Path(
-    __file__
-).resolve().parent.parent
-
-DATABASE_PATH = (
-    PROJECT_ROOT / "siwes_management.db"
-)
+from ui.dashboard import Dashboard
+from database.database import get_connection, setup_database
 
 
 # ============================================================
@@ -47,13 +33,8 @@ ERROR = "#DC2626"
 # APPEARANCE
 # ============================================================
 
-ctk.set_appearance_mode(
-    "light"
-)
-
-ctk.set_default_color_theme(
-    "blue"
-)
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("blue")
 
 
 # ============================================================
@@ -61,10 +42,7 @@ ctk.set_default_color_theme(
 # ============================================================
 
 def hash_password(password):
-
-    salt = os.urandom(
-        16
-    )
+    salt = os.urandom(16)
 
     password_hash = hashlib.pbkdf2_hmac(
         "sha256",
@@ -73,31 +51,15 @@ def hash_password(password):
         100000
     )
 
-    return (
-        salt.hex()
-        + ":"
-        + password_hash.hex()
-    )
+    return salt.hex() + ":" + password_hash.hex()
 
 
-def verify_password(
-    password,
-    stored_password
-):
-
+def verify_password(password, stored_password):
     try:
+        salt_hex, hash_hex = stored_password.split(":")
 
-        salt_hex, hash_hex = (
-            stored_password.split(":")
-        )
-
-        salt = bytes.fromhex(
-            salt_hex
-        )
-
-        original_hash = bytes.fromhex(
-            hash_hex
-        )
+        salt = bytes.fromhex(salt_hex)
+        original_hash = bytes.fromhex(hash_hex)
 
         new_hash = hashlib.pbkdf2_hmac(
             "sha256",
@@ -106,45 +68,10 @@ def verify_password(
             100000
         )
 
-        return (
-            new_hash == original_hash
-        )
+        return new_hash == original_hash
 
-    except (
-        ValueError,
-        TypeError
-    ):
-
+    except (ValueError, TypeError):
         return False
-
-
-# ============================================================
-# DATABASE SETUP
-# ============================================================
-
-def setup_database():
-
-    connection = sqlite3.connect(
-        DATABASE_PATH
-    )
-
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            full_name TEXT NOT NULL,
-            email TEXT UNIQUE,
-            role TEXT NOT NULL,
-            is_active INTEGER DEFAULT 1
-        )
-    """)
-
-    connection.commit()
-
-    connection.close()
 
 
 # ============================================================
@@ -155,26 +82,15 @@ class AuthWindow:
 
     def __init__(self):
 
+        # Initialize the shared SIWES database
         setup_database()
 
         self.app = ctk.CTk()
 
-        self.app.title(
-            "SIWES Management System"
-        )
-
-        self.app.geometry(
-            "1200x700"
-        )
-
-        self.app.minsize(
-            1000,
-            620
-        )
-
-        self.app.configure(
-            fg_color=WHITE
-        )
+        self.app.title("SIWES Management System")
+        self.app.geometry("1200x700")
+        self.app.minsize(1000, 620)
+        self.app.configure(fg_color=WHITE)
 
         self.branding_frame = None
         self.form_frame = None
@@ -202,9 +118,7 @@ class AuthWindow:
             fill="both"
         )
 
-        self.branding_frame.pack_propagate(
-            False
-        )
+        self.branding_frame.pack_propagate(False)
 
         circle = ctk.CTkFrame(
             self.branding_frame,
@@ -254,9 +168,7 @@ class AuthWindow:
             text_color=WHITE
         )
 
-        title.pack(
-            anchor="w"
-        )
+        title.pack(anchor="w")
 
         subtitle = ctk.CTkLabel(
             content,
@@ -329,9 +241,7 @@ class AuthWindow:
                 text_color=WHITE
             )
 
-            heading_label.pack(
-                anchor="w"
-            )
+            heading_label.pack(anchor="w")
 
             description_label = ctk.CTkLabel(
                 service,
@@ -372,11 +282,9 @@ class AuthWindow:
     def clear_form(self):
 
         if self.form_frame is not None:
-
             self.form_frame.destroy()
 
         if self.branding_frame is not None:
-
             self.branding_frame.destroy()
 
     # ========================================================
@@ -388,7 +296,6 @@ class AuthWindow:
         self.clear_form()
 
         self.create_branding_panel()
-
         self.create_form_area()
 
         container = ctk.CTkFrame(
@@ -413,9 +320,7 @@ class AuthWindow:
             text_color=TEXT
         )
 
-        heading.pack(
-            anchor="w"
-        )
+        heading.pack(anchor="w")
 
         description = ctk.CTkLabel(
             container,
@@ -444,9 +349,7 @@ class AuthWindow:
             text_color=TEXT
         )
 
-        username_label.pack(
-            anchor="w"
-        )
+        username_label.pack(anchor="w")
 
         self.login_username = ctk.CTkEntry(
             container,
@@ -455,6 +358,8 @@ class AuthWindow:
                 "Enter your username or email"
             ),
             fg_color=INPUT_BG,
+            text_color=TEXT,
+            placeholder_text_color="#94A3B8",
             border_color=BORDER,
             border_width=1,
             corner_radius=8
@@ -475,9 +380,7 @@ class AuthWindow:
             text_color=TEXT
         )
 
-        password_label.pack(
-            anchor="w"
-        )
+        password_label.pack(anchor="w")
 
         password_frame = ctk.CTkFrame(
             container,
@@ -497,6 +400,8 @@ class AuthWindow:
             ),
             show="•",
             fg_color=INPUT_BG,
+            text_color=TEXT,
+            placeholder_text_color="#94A3B8",
             border_color=BORDER,
             border_width=1,
             corner_radius=8
@@ -595,9 +500,7 @@ class AuthWindow:
             text_color=TEXT_LIGHT
         )
 
-        question.pack(
-            side="left"
-        )
+        question.pack(side="left")
 
         signup_button = ctk.CTkButton(
             bottom,
@@ -637,7 +540,6 @@ class AuthWindow:
         self.clear_form()
 
         self.create_branding_panel()
-
         self.create_form_area()
 
         container = ctk.CTkFrame(
@@ -662,9 +564,7 @@ class AuthWindow:
             text_color=TEXT
         )
 
-        heading.pack(
-            anchor="w"
-        )
+        heading.pack(anchor="w")
 
         description = ctk.CTkLabel(
             container,
@@ -791,15 +691,15 @@ class AuthWindow:
             text_color=TEXT
         )
 
-        label.pack(
-            anchor="w"
-        )
+        label.pack(anchor="w")
 
         entry = ctk.CTkEntry(
             parent,
             height=42,
             placeholder_text=placeholder,
             fg_color=INPUT_BG,
+            text_color=TEXT,
+            placeholder_text_color="#94A3B8",
             border_color=BORDER,
             border_width=1,
             corner_radius=8,
@@ -819,9 +719,7 @@ class AuthWindow:
 
     def toggle_login_password(self):
 
-        if self.login_password.cget(
-            "show"
-        ) == "":
+        if self.login_password.cget("show") == "":
 
             self.login_password.configure(
                 show="•"
@@ -880,9 +778,7 @@ class AuthWindow:
 
         try:
 
-            connection = sqlite3.connect(
-                DATABASE_PATH
-            )
+            connection = get_connection()
 
             cursor = connection.cursor()
 
@@ -953,30 +849,15 @@ class AuthWindow:
 
                 return
 
-            print(
-                "LOGIN SUCCESSFUL"
-            )
-
-            print(
-                f"User ID: {user_id}"
-            )
-
-            print(
-                f"Username: {username}"
-            )
-
-            print(
-                f"Role: {role}"
-            )
+            print("LOGIN SUCCESSFUL")
+            print(f"User ID: {user_id}")
+            print(f"Username: {username}")
+            print(f"Role: {role}")
 
             user_data = {
-
                 "id": user_id,
-
                 "username": username,
-
                 "full_name": full_name,
-
                 "role": role
             }
 
@@ -991,7 +872,7 @@ class AuthWindow:
                 )
             )
 
-        except sqlite3.Error as error:
+        except Exception as error:
 
             self.login_status.configure(
                 text=(
@@ -1008,7 +889,6 @@ class AuthWindow:
         finally:
 
             if connection is not None:
-
                 connection.close()
 
     # ========================================================
@@ -1184,9 +1064,7 @@ class AuthWindow:
 
         try:
 
-            connection = sqlite3.connect(
-                DATABASE_PATH
-            )
+            connection = get_connection()
 
             cursor = connection.cursor()
 
@@ -1295,17 +1173,7 @@ class AuthWindow:
                 "ACCOUNT CREATED SUCCESSFULLY"
             )
 
-        except sqlite3.IntegrityError:
-
-            self.signup_status.configure(
-                text=(
-                    "Username or email "
-                    "already exists."
-                ),
-                text_color=ERROR
-            )
-
-        except sqlite3.Error as error:
+        except Exception as error:
 
             self.signup_status.configure(
                 text=(
@@ -1322,7 +1190,6 @@ class AuthWindow:
         finally:
 
             if connection is not None:
-
                 connection.close()
 
 
@@ -1331,5 +1198,4 @@ class AuthWindow:
 # ============================================================
 
 if __name__ == "__main__":
-
     AuthWindow()
