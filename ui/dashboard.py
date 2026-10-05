@@ -1,8 +1,16 @@
 import customtkinter as ctk
 
+
 from database.database import (
     get_connection,
     setup_database
+)
+
+
+from ui.animations import (
+    animate_width,
+    add_hover_effect,
+    add_press_effect
 )
 
 
@@ -72,6 +80,7 @@ class Dashboard:
         self.create_sidebar()
         self.create_main_area()
 
+
     # ========================================================
     # SIDEBAR
     # ========================================================
@@ -91,6 +100,18 @@ class Dashboard:
         )
 
         self.sidebar.pack_propagate(False)
+
+        # ----------------------------------------------------
+        # START COLLAPSED
+        # ----------------------------------------------------
+
+        self.sidebar.configure(
+            width=0
+        )
+
+        # ----------------------------------------------------
+        # SIDEBAR CONTENT
+        # ----------------------------------------------------
 
         title = ctk.CTkLabel(
             self.sidebar,
@@ -147,6 +168,29 @@ class Dashboard:
             pady=25,
             fill="x"
         )
+
+        # Press animation
+        add_press_effect(
+            logout_button,
+            "#DC2626",
+            "#991B1B"
+        )
+
+        # ----------------------------------------------------
+        # SIDEBAR ENTRANCE ANIMATION
+        # ----------------------------------------------------
+
+        self.app.after(
+            100,
+            lambda: animate_width(
+                self.sidebar,
+                0,
+                240,
+                duration=500,
+                steps=28
+            )
+        )
+
 
     # ========================================================
     # MENU BUTTONS
@@ -218,6 +262,17 @@ class Dashboard:
                 fill="x"
             )
 
+            # ------------------------------------------------
+            # HOVER ANIMATION
+            # ------------------------------------------------
+
+            add_hover_effect(
+                button,
+                "transparent",
+                NAVY_LIGHT
+            )
+
+
     # ========================================================
     # MAIN AREA
     # ========================================================
@@ -240,6 +295,7 @@ class Dashboard:
             "Dashboard"
         )
 
+
     # ========================================================
     # PAGE ROUTER
     # ========================================================
@@ -261,6 +317,7 @@ class Dashboard:
             self.show_placeholder(
                 page_name
             )
+
 
     # ========================================================
     # GENERAL PLACEHOLDER
@@ -333,6 +390,7 @@ class Dashboard:
             pady=30
         )
 
+
     # ========================================================
     # STUDENT INFORMATION PAGE
     # ========================================================
@@ -404,6 +462,12 @@ class Dashboard:
                 side="right"
             )
 
+            add_press_effect(
+                edit_button,
+                BLUE,
+                "#1D4ED8"
+            )
+
         else:
 
             save_button = ctk.CTkButton(
@@ -421,6 +485,12 @@ class Dashboard:
                 padx=(8, 0)
             )
 
+            add_press_effect(
+                save_button,
+                SUCCESS,
+                "#166534"
+            )
+
             cancel_button = ctk.CTkButton(
                 button_bar,
                 text="Cancel",
@@ -433,6 +503,12 @@ class Dashboard:
 
             cancel_button.pack(
                 side="right"
+            )
+
+            add_press_effect(
+                cancel_button,
+                "#64748B",
+                "#334155"
             )
 
         # ====================================================
@@ -642,8 +718,8 @@ class Dashboard:
         )
 
         # Load existing information
-
         self.load_student_information()
+
 
     # ========================================================
     # FORM INPUT
@@ -702,6 +778,7 @@ class Dashboard:
 
         return entry
 
+
     # ========================================================
     # EDIT MODE
     # ========================================================
@@ -741,20 +818,20 @@ class Dashboard:
                 )
             )
 
+
     def enable_information_editing(self):
 
-        # Rebuild the page in edit mode
         self.editing_information = True
 
         self.show_student_information()
 
+
     def cancel_information_edit(self):
 
-        # Return to view mode and reload
-        # the saved information from the database.
         self.editing_information = False
 
         self.show_student_information()
+
 
     # ========================================================
     # GET USER EMAIL
@@ -785,7 +862,6 @@ class Dashboard:
             result = cursor.fetchone()
 
             if result:
-
                 return result[0]
 
         except Exception as error:
@@ -797,10 +873,10 @@ class Dashboard:
         finally:
 
             if connection:
-
                 connection.close()
 
         return None
+
 
     # ========================================================
     # LOAD STUDENT INFORMATION
@@ -972,12 +1048,12 @@ class Dashboard:
         finally:
 
             if connection:
-
                 connection.close()
 
         self.set_information_editable(
             self.editing_information
         )
+
 
     # ========================================================
     # SAVE STUDENT INFORMATION
@@ -1078,7 +1154,7 @@ class Dashboard:
             )
 
             # ------------------------------------------------
-            # Find existing student profile
+            # FIND EXISTING PROFILE
             # ------------------------------------------------
 
             cursor.execute(
@@ -1172,7 +1248,7 @@ class Dashboard:
                 )
 
             # ------------------------------------------------
-            # Keep the login user's name/email synchronized
+            # KEEP USER ACCOUNT SYNCHRONIZED
             # ------------------------------------------------
 
             cursor.execute(
@@ -1211,18 +1287,9 @@ class Dashboard:
                 )
             )
 
-            self.info_status.configure(
-                text=(
-                    "Student information "
-                    "saved successfully."
-                ),
-                text_color=SUCCESS
-            )
-
             # Return to view mode
             self.editing_information = False
 
-            # Rebuild page so Edit Information appears again
             self.show_student_information()
 
             self.info_status.configure(
@@ -1236,7 +1303,6 @@ class Dashboard:
         except Exception as error:
 
             if connection:
-
                 connection.rollback()
 
             self.info_status.configure(
@@ -1253,8 +1319,8 @@ class Dashboard:
         finally:
 
             if connection:
-
                 connection.close()
+
 
     # ========================================================
     # LOGOUT
