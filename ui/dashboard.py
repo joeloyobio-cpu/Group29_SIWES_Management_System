@@ -5,6 +5,8 @@ from database.database import (
     setup_database
 )
 
+from digital_logbook.logbook_ui import DigitalLogbook
+
 
 # ============================================================
 # COLORS
@@ -256,11 +258,133 @@ class Dashboard:
 
             self.show_student_information()
 
+        elif page_name == "Digital Logbook":
+
+            self.show_digital_logbook()
+
         else:
 
             self.show_placeholder(
                 page_name
             )
+
+    # ========================================================
+    # DIGITAL LOGBOOK PAGE
+    # ========================================================
+
+    def show_digital_logbook(self):
+
+        student_id = self.get_current_student_id()
+
+        if student_id is None:
+
+            error_frame = ctk.CTkFrame(
+                self.main_area,
+                fg_color=WHITE,
+                corner_radius=12
+            )
+
+            error_frame.pack(
+                fill="both",
+                expand=True,
+                padx=40,
+                pady=40
+            )
+
+            ctk.CTkLabel(
+                error_frame,
+                text="Digital Logbook",
+                font=ctk.CTkFont(
+                    size=30,
+                    weight="bold"
+                ),
+                text_color=TEXT
+            ).pack(
+                anchor="w",
+                padx=30,
+                pady=(30, 10)
+            )
+
+            ctk.CTkLabel(
+                error_frame,
+                text=(
+                    "No student profile was found for this account. "
+                    "Please complete your student information first."
+                ),
+                font=ctk.CTkFont(
+                    size=15
+                ),
+                text_color=ERROR,
+                wraplength=700,
+                justify="left"
+            ).pack(
+                anchor="w",
+                padx=30
+            )
+
+            return
+
+        logbook = DigitalLogbook(
+            self.main_area,
+            student_id=student_id
+        )
+
+        logbook.pack(
+            fill="both",
+            expand=True
+        )
+
+    # ========================================================
+    # GET CURRENT STUDENT ID
+    # ========================================================
+
+    def get_current_student_id(self):
+
+        email = self.get_user_email()
+
+        if not email:
+
+            return None
+
+        connection = None
+
+        try:
+
+            connection = get_connection()
+
+            cursor = connection.cursor()
+
+            cursor.execute(
+                """
+                SELECT id
+                FROM students
+                WHERE email = ?
+                LIMIT 1
+                """,
+                (
+                    email,
+                )
+            )
+
+            result = cursor.fetchone()
+
+            if result:
+
+                return result[0]
+
+        except Exception as error:
+
+            print(
+                f"Could not find student ID: {error}"
+            )
+
+        finally:
+
+            if connection:
+
+                connection.close()
+
+        return None
 
     # ========================================================
     # GENERAL PLACEHOLDER
@@ -743,15 +867,12 @@ class Dashboard:
 
     def enable_information_editing(self):
 
-        # Rebuild the page in edit mode
         self.editing_information = True
 
         self.show_student_information()
 
     def cancel_information_edit(self):
 
-        # Return to view mode and reload
-        # the saved information from the database.
         self.editing_information = False
 
         self.show_student_information()

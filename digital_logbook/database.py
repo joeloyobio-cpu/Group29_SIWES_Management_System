@@ -1,11 +1,9 @@
-# import sqlite3 means that we are importing the sqlite3 module, 
-# which allows us to interact with SQLite databases in Python.
 import sqlite3
 
-from logbook import LogbookEntry
+from .logbook import LogbookEntry
+
 
 def row_to_entry(row):
-
     return LogbookEntry(
         entry_id=row[0],
         student_id=row[1],
@@ -18,8 +16,7 @@ def row_to_entry(row):
         status=row[8]
     )
 
-# create_database() function is defined to create a database and a table for 
-# logbook entries if they do not already exist.
+
 def create_database():
     connection = sqlite3.connect("siwes.db")
 
@@ -45,7 +42,7 @@ def create_database():
 
 create_database()
 
-# save_entry(entry) function is defined to save a logbook entry to the database.
+
 def save_entry(entry):
 
     connection = None
@@ -91,6 +88,7 @@ def save_entry(entry):
         if connection:
             connection.close()
 
+
 def entry_exists(student_id, date, exclude_id=None):
 
     connection = sqlite3.connect("siwes.db")
@@ -112,10 +110,7 @@ def entry_exists(student_id, date, exclude_id=None):
         query += " AND id != ?"
         parameters.append(exclude_id)
 
-    cursor.execute(
-        query,
-        parameters
-    )
+    cursor.execute(query, parameters)
 
     result = cursor.fetchone()
 
@@ -123,10 +118,6 @@ def entry_exists(student_id, date, exclude_id=None):
 
     return result is not None
 
-# get_entries(student_id) function is defined to retrieve all logbook entries for a 
-# specific student from the database.
-# where student_id is passed as a parameter to the function. 
-# The entries are ordered by date.
 
 def get_entries(student_id):
 
@@ -144,19 +135,12 @@ def get_entries(student_id):
 
     connection.close()
 
-    entries = []
-    
-    for row in rows:
-        
-        entry = row_to_entry(row)
-        
-        entries.append(entry)
-        
-    return entries
+    return [
+        row_to_entry(row)
+        for row in rows
+    ]
 
-# search_entries(student_id, keyword) function is defined to search for logbook entries 
-# for a specific student that contain a given keyword in the activities, skills learned, 
-# or challenges fields.
+
 def search_entries(student_id, keyword):
 
     connection = sqlite3.connect("siwes.db")
@@ -185,19 +169,12 @@ def search_entries(student_id, keyword):
 
     connection.close()
 
-    entries = []
-    
-    for row in rows:
-        
-        entry = row_to_entry(row)
-        
-        entries.append(entry)
-        
-    return entries
+    return [
+        row_to_entry(row)
+        for row in rows
+    ]
 
-# filter_entries(student_id, week_number=None, status=None, keyword=None) 
-# function is defined to filter logbook entries for a specific student based on 
-# optional criteria such as week number, status, and keyword.
+
 def filter_entries(
     student_id,
     week_number=None,
@@ -249,19 +226,12 @@ def filter_entries(
 
     connection.close()
 
-    entries = []
+    return [
+        row_to_entry(row)
+        for row in rows
+    ]
 
-    entries = []
-    
-    for row in rows:
-        
-        entry = row_to_entry(row)
-        
-        entries.append(entry)
-        
-    return entries
 
-# update_entry(entry_id, date, week_number, activities, skills_learned, challenges) function is defined to update an existing logbook entry in the database.
 def update_entry(entry):
 
     connection = sqlite3.connect("siwes.db")
@@ -269,7 +239,6 @@ def update_entry(entry):
 
     cursor.execute("""
         UPDATE logbook_entries
-
         SET
             date = ?,
             week_number = ?,
@@ -278,7 +247,6 @@ def update_entry(entry):
             challenges = ?,
             supervisor_comment = ?,
             status = ?
-
         WHERE id = ?
     """, (
         entry.date,
@@ -294,7 +262,7 @@ def update_entry(entry):
     connection.commit()
     connection.close()
 
-# delete_entry(entry_id) function is defined to delete a logbook entry from the database based on the provided entry_id.
+
 def delete_entry(entry):
 
     connection = sqlite3.connect("siwes.db")
@@ -308,12 +276,18 @@ def delete_entry(entry):
     connection.commit()
     connection.close()
 
-# update_entry_status(entry_id, status, supervisor_comment=None) function is 
-# defined to update the status and supervisor comment of a logbook entry in the 
-# database based on the provided entry_id.
-def update_entry_status(entry_id, status, supervisor_comment=None):
 
-    valid_statuses = ["Pending", "Approved", "Rejected"]
+def update_entry_status(
+    entry_id,
+    status,
+    supervisor_comment=None
+):
+
+    valid_statuses = [
+        "Pending",
+        "Approved",
+        "Rejected"
+    ]
 
     if status not in valid_statuses:
         raise ValueError("Invalid status.")
@@ -323,7 +297,8 @@ def update_entry_status(entry_id, status, supervisor_comment=None):
 
     cursor.execute("""
         UPDATE logbook_entries
-        SET status = ?,
+        SET
+            status = ?,
             supervisor_comment = ?
         WHERE id = ?
     """, (
@@ -338,5 +313,3 @@ def update_entry_status(entry_id, status, supervisor_comment=None):
 
     connection.commit()
     connection.close()
-
-    
