@@ -1,10 +1,9 @@
 import customtkinter as ctk
 import hashlib
 import os
-import re
 
-from ui.dashboard import Dashboard
 from database.database import get_connection, setup_database
+from ui.dashboard import Dashboard
 
 
 # ============================================================
@@ -75,14 +74,13 @@ def verify_password(password, stored_password):
 
 
 # ============================================================
-# AUTHENTICATION WINDOW
+# AUTH WINDOW
 # ============================================================
 
 class AuthWindow:
 
     def __init__(self):
 
-        # Initialize the shared SIWES database
         setup_database()
 
         self.app = ctk.CTk()
@@ -90,7 +88,9 @@ class AuthWindow:
         self.app.title("SIWES Management System")
         self.app.geometry("1200x700")
         self.app.minsize(1000, 620)
-        self.app.configure(fg_color=WHITE)
+        self.app.configure(
+            fg_color=WHITE
+        )
 
         self.branding_frame = None
         self.form_frame = None
@@ -101,7 +101,7 @@ class AuthWindow:
         self.app.mainloop()
 
     # ========================================================
-    # BRANDING PANEL
+    # BRANDING
     # ========================================================
 
     def create_branding_panel(self):
@@ -148,9 +148,7 @@ class AuthWindow:
         cap = ctk.CTkLabel(
             content,
             text="🎓",
-            font=ctk.CTkFont(
-                size=58
-            )
+            font=ctk.CTkFont(size=58)
         )
 
         cap.pack(
@@ -158,7 +156,7 @@ class AuthWindow:
             pady=(10, 20)
         )
 
-        title = ctk.CTkLabel(
+        ctk.CTkLabel(
             content,
             text="SIWES",
             font=ctk.CTkFont(
@@ -166,11 +164,9 @@ class AuthWindow:
                 weight="bold"
             ),
             text_color=WHITE
-        )
+        ).pack(anchor="w")
 
-        title.pack(anchor="w")
-
-        subtitle = ctk.CTkLabel(
+        ctk.CTkLabel(
             content,
             text="Management System",
             font=ctk.CTkFont(
@@ -178,28 +174,22 @@ class AuthWindow:
                 weight="bold"
             ),
             text_color=WHITE
-        )
-
-        subtitle.pack(
+        ).pack(
             anchor="w",
             pady=(0, 20)
         )
 
-        motto = ctk.CTkLabel(
+        ctk.CTkLabel(
             content,
             text=(
-                "...Connecting students,\n"
+                "Connecting students,\n"
                 "supervisors and institutions\n"
                 "for a brighter future."
             ),
-            font=ctk.CTkFont(
-                size=16
-            ),
+            font=ctk.CTkFont(size=16),
             text_color="#D7E5F5",
             justify="left"
-        )
-
-        motto.pack(
+        ).pack(
             anchor="w",
             pady=(0, 40)
         )
@@ -214,8 +204,8 @@ class AuthWindow:
                 "Monitor students and provide feedback"
             ),
             (
-                "INSTITUTIONS",
-                "Manage placements and reports"
+                "ADMINISTRATORS",
+                "Manage the entire SIWES system"
             )
         ]
 
@@ -231,7 +221,7 @@ class AuthWindow:
                 pady=8
             )
 
-            heading_label = ctk.CTkLabel(
+            ctk.CTkLabel(
                 service,
                 text=heading,
                 font=ctk.CTkFont(
@@ -239,20 +229,14 @@ class AuthWindow:
                     weight="bold"
                 ),
                 text_color=WHITE
-            )
+            ).pack(anchor="w")
 
-            heading_label.pack(anchor="w")
-
-            description_label = ctk.CTkLabel(
+            ctk.CTkLabel(
                 service,
                 text=description,
-                font=ctk.CTkFont(
-                    size=12
-                ),
+                font=ctk.CTkFont(size=12),
                 text_color="#B8CCE2"
-            )
-
-            description_label.pack(
+            ).pack(
                 anchor="w",
                 pady=(2, 0)
             )
@@ -276,7 +260,7 @@ class AuthWindow:
         )
 
     # ========================================================
-    # CLEAR FORM
+    # CLEAR
     # ========================================================
 
     def clear_form(self):
@@ -305,12 +289,12 @@ class AuthWindow:
 
         container.pack(
             padx=80,
-            pady=55,
+            pady=45,
             fill="both",
             expand=True
         )
 
-        heading = ctk.CTkLabel(
+        ctk.CTkLabel(
             container,
             text="Welcome Back",
             font=ctk.CTkFont(
@@ -318,28 +302,60 @@ class AuthWindow:
                 weight="bold"
             ),
             text_color=TEXT
-        )
+        ).pack(anchor="w")
 
-        heading.pack(anchor="w")
-
-        description = ctk.CTkLabel(
+        ctk.CTkLabel(
             container,
-            text=(
-                "Sign in to continue "
-                "to your SIWES account."
-            ),
-            font=ctk.CTkFont(
-                size=14
-            ),
+            text="Select your role and sign in to your SIWES account.",
+            font=ctk.CTkFont(size=14),
             text_color=TEXT_LIGHT
-        )
-
-        description.pack(
+        ).pack(
             anchor="w",
-            pady=(5, 35)
+            pady=(5, 25)
         )
 
-        username_label = ctk.CTkLabel(
+        # ----------------------------------------------------
+        # ROLE
+        # ----------------------------------------------------
+
+        ctk.CTkLabel(
+            container,
+            text="Login As",
+            font=ctk.CTkFont(
+                size=13,
+                weight="bold"
+            ),
+            text_color=TEXT
+        ).pack(anchor="w")
+
+        self.login_role = ctk.CTkComboBox(
+            container,
+            values=[
+                "Student",
+                "Supervisor",
+                "Admin"
+            ],
+            height=48,
+            fg_color=INPUT_BG,
+            text_color=TEXT,
+            border_color=BORDER,
+            border_width=1,
+            corner_radius=8,
+            state="readonly"
+        )
+
+        self.login_role.set("Student")
+
+        self.login_role.pack(
+            fill="x",
+            pady=(7, 18)
+        )
+
+        # ----------------------------------------------------
+        # USERNAME
+        # ----------------------------------------------------
+
+        ctk.CTkLabel(
             container,
             text="Username or Email",
             font=ctk.CTkFont(
@@ -347,16 +363,12 @@ class AuthWindow:
                 weight="bold"
             ),
             text_color=TEXT
-        )
-
-        username_label.pack(anchor="w")
+        ).pack(anchor="w")
 
         self.login_username = ctk.CTkEntry(
             container,
             height=48,
-            placeholder_text=(
-                "Enter your username or email"
-            ),
+            placeholder_text="Enter your username or email",
             fg_color=INPUT_BG,
             text_color=TEXT,
             placeholder_text_color="#94A3B8",
@@ -367,10 +379,14 @@ class AuthWindow:
 
         self.login_username.pack(
             fill="x",
-            pady=(7, 20)
+            pady=(7, 18)
         )
 
-        password_label = ctk.CTkLabel(
+        # ----------------------------------------------------
+        # PASSWORD
+        # ----------------------------------------------------
+
+        ctk.CTkLabel(
             container,
             text="Password",
             font=ctk.CTkFont(
@@ -378,9 +394,7 @@ class AuthWindow:
                 weight="bold"
             ),
             text_color=TEXT
-        )
-
-        password_label.pack(anchor="w")
+        ).pack(anchor="w")
 
         password_frame = ctk.CTkFrame(
             container,
@@ -395,9 +409,7 @@ class AuthWindow:
         self.login_password = ctk.CTkEntry(
             password_frame,
             height=48,
-            placeholder_text=(
-                "Enter your password"
-            ),
+            placeholder_text="Enter your password",
             show="•",
             fg_color=INPUT_BG,
             text_color=TEXT,
@@ -430,42 +442,27 @@ class AuthWindow:
             x=-5
         )
 
-        self.remember_me = ctk.BooleanVar(
-            value=False
-        )
-
-        remember = ctk.CTkCheckBox(
-            container,
-            text="Remember me",
-            variable=self.remember_me,
-            font=ctk.CTkFont(
-                size=13
-            ),
-            text_color=TEXT_LIGHT,
-            checkbox_width=18,
-            checkbox_height=18
-        )
-
-        remember.pack(
-            anchor="w",
-            pady=(0, 25)
-        )
+        # ----------------------------------------------------
+        # STATUS
+        # ----------------------------------------------------
 
         self.login_status = ctk.CTkLabel(
             container,
             text="",
-            font=ctk.CTkFont(
-                size=12
-            ),
+            font=ctk.CTkFont(size=12),
             text_color=ERROR
         )
 
         self.login_status.pack(
             anchor="w",
-            pady=(0, 5)
+            pady=(0, 8)
         )
 
-        login_button = ctk.CTkButton(
+        # ----------------------------------------------------
+        # LOGIN BUTTON
+        # ----------------------------------------------------
+
+        ctk.CTkButton(
             container,
             text="Sign In",
             height=50,
@@ -477,12 +474,14 @@ class AuthWindow:
                 weight="bold"
             ),
             command=self.login
+        ).pack(
+            fill="x",
+            pady=(0, 25)
         )
 
-        login_button.pack(
-            fill="x",
-            pady=(0, 30)
-        )
+        # ----------------------------------------------------
+        # SIGNUP
+        # ----------------------------------------------------
 
         bottom = ctk.CTkFrame(
             container,
@@ -491,18 +490,14 @@ class AuthWindow:
 
         bottom.pack()
 
-        question = ctk.CTkLabel(
+        ctk.CTkLabel(
             bottom,
             text="Don't have an account?",
-            font=ctk.CTkFont(
-                size=13
-            ),
+            font=ctk.CTkFont(size=13),
             text_color=TEXT_LIGHT
-        )
+        ).pack(side="left")
 
-        question.pack(side="left")
-
-        signup_button = ctk.CTkButton(
+        ctk.CTkButton(
             bottom,
             text="Create Account",
             width=125,
@@ -514,9 +509,7 @@ class AuthWindow:
                 weight="bold"
             ),
             command=self.show_signup
-        )
-
-        signup_button.pack(
+        ).pack(
             side="left",
             padx=(5, 0)
         )
@@ -554,7 +547,7 @@ class AuthWindow:
             expand=True
         )
 
-        heading = ctk.CTkLabel(
+        ctk.CTkLabel(
             container,
             text="Create Your Account",
             font=ctk.CTkFont(
@@ -562,23 +555,14 @@ class AuthWindow:
                 weight="bold"
             ),
             text_color=TEXT
-        )
+        ).pack(anchor="w")
 
-        heading.pack(anchor="w")
-
-        description = ctk.CTkLabel(
+        ctk.CTkLabel(
             container,
-            text=(
-                "Create an account to access "
-                "the SIWES Management System."
-            ),
-            font=ctk.CTkFont(
-                size=13
-            ),
+            text="Create a student account to access SIWES.",
+            font=ctk.CTkFont(size=13),
             text_color=TEXT_LIGHT
-        )
-
-        description.pack(
+        ).pack(
             anchor="w",
             pady=(5, 20)
         )
@@ -618,9 +602,7 @@ class AuthWindow:
         self.signup_status = ctk.CTkLabel(
             container,
             text="",
-            font=ctk.CTkFont(
-                size=12
-            ),
+            font=ctk.CTkFont(size=12),
             text_color=ERROR
         )
 
@@ -629,7 +611,7 @@ class AuthWindow:
             pady=(0, 5)
         )
 
-        create_button = ctk.CTkButton(
+        ctk.CTkButton(
             container,
             text="Create Account",
             height=48,
@@ -641,17 +623,14 @@ class AuthWindow:
                 weight="bold"
             ),
             command=self.create_account
-        )
-
-        create_button.pack(
+        ).pack(
             fill="x",
             pady=(0, 15)
         )
 
-        back_button = ctk.CTkButton(
+        ctk.CTkButton(
             container,
-            text="← Back to Sign In",
-            height=40,
+            text="← Back to Login",
             fg_color="transparent",
             hover_color="#EAF1FB",
             text_color=BLUE,
@@ -660,38 +639,29 @@ class AuthWindow:
                 weight="bold"
             ),
             command=self.show_login
-        )
-
-        back_button.pack()
-
-        self.signup_confirm.bind(
-            "<Return>",
-            lambda event: self.create_account()
-        )
+        ).pack()
 
     # ========================================================
-    # INPUT CREATOR
+    # INPUT HELPER
     # ========================================================
 
     def create_input(
         self,
         parent,
-        label_text,
+        label,
         placeholder,
         password=False
     ):
 
-        label = ctk.CTkLabel(
+        ctk.CTkLabel(
             parent,
-            text=label_text,
+            text=label,
             font=ctk.CTkFont(
-                size=12,
+                size=13,
                 weight="bold"
             ),
             text_color=TEXT
-        )
-
-        label.pack(anchor="w")
+        ).pack(anchor="w")
 
         entry = ctk.CTkEntry(
             parent,
@@ -708,7 +678,7 @@ class AuthWindow:
 
         entry.pack(
             fill="x",
-            pady=(5, 11)
+            pady=(5, 12)
         )
 
         return entry
@@ -745,72 +715,66 @@ class AuthWindow:
 
     def login(self):
 
-        username_or_email = (
-            self.login_username.get().strip()
-        )
-
-        password = (
-            self.login_password.get()
-        )
+        username_or_email = self.login_username.get().strip()
+        password = self.login_password.get()
+        selected_role = self.login_role.get().strip().lower()
 
         if not username_or_email:
-
             self.login_status.configure(
-                text=(
-                    "Please enter your "
-                    "username or email."
-                ),
+                text="Please enter your username or email.",
                 text_color=ERROR
             )
-
             return
 
         if not password:
-
             self.login_status.configure(
                 text="Please enter your password.",
                 text_color=ERROR
             )
+            return
 
+        if not selected_role:
+            self.login_status.configure(
+                text="Please select your role.",
+                text_color=ERROR
+            )
             return
 
         connection = None
 
         try:
-
             connection = get_connection()
-
             cursor = connection.cursor()
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     id,
                     username,
                     password_hash,
                     full_name,
+                    email,
                     role,
                     is_active
                 FROM users
-                WHERE username = ?
-                   OR email = ?
+                WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?))
+                  AND LOWER(role) = ?
                 LIMIT 1
-            """, (
-                username_or_email,
-                username_or_email
-            ))
+                """,
+                (
+                    username_or_email,
+                    username_or_email,
+                    selected_role
+                )
+            )
 
             user = cursor.fetchone()
 
             if user is None:
-
                 self.login_status.configure(
-                    text=(
-                        "Invalid username/email "
-                        "or password."
-                    ),
+                    text="Invalid credentials or incorrect account type.",
                     text_color=ERROR
                 )
-
                 return
 
             (
@@ -818,73 +782,114 @@ class AuthWindow:
                 username,
                 stored_password,
                 full_name,
+                email,
                 role,
                 is_active
             ) = user
 
             if not is_active:
-
                 self.login_status.configure(
-                    text=(
-                        "This account has "
-                        "been disabled."
-                    ),
+                    text="This account has been disabled.",
                     text_color=ERROR
                 )
-
                 return
 
-            if not verify_password(
-                password,
-                stored_password
-            ):
-
+            if not verify_password(password, stored_password):
                 self.login_status.configure(
-                    text=(
-                        "Invalid username/email "
-                        "or password."
-                    ),
+                    text="Invalid username/email or password.",
                     text_color=ERROR
                 )
-
                 return
-
-            print("LOGIN SUCCESSFUL")
-            print(f"User ID: {user_id}")
-            print(f"Username: {username}")
-            print(f"Role: {role}")
 
             user_data = {
                 "id": user_id,
                 "username": username,
                 "full_name": full_name,
+                "email": email,
                 "role": role
             }
 
-            # Hide login window
+            # ------------------------------------------------
+            # OPEN THE CORRECT DASHBOARD
+            #
+            # IMPORTANT:
+            # Do NOT withdraw the login window until the
+            # dashboard has been created successfully.
+            # ------------------------------------------------
+
+            self.current_dashboard = None
+
+            if role.lower() == "student":
+
+                self.current_dashboard = Dashboard(
+                    user=user_data,
+                    logout_callback=self.logout
+                )
+
+            elif role.lower() == "supervisor":
+
+                from ui.supervisors_dashboard import SupervisorsDashboard
+
+                self.current_dashboard = SupervisorsDashboard(
+                    user=user_data,
+                    logout_callback=self.logout
+                )
+
+            elif role.lower() == "admin":
+
+                from ui.admin_dashboard import AdminDashboard
+
+                self.current_dashboard = AdminDashboard(
+                    user=user_data,
+                    logout_callback=self.logout
+                )
+
+            else:
+                self.login_status.configure(
+                    text="Unknown account role.",
+                    text_color=ERROR
+                )
+                return
+
+            # ------------------------------------------------
+            # DASHBOARD WAS CREATED SUCCESSFULLY
+            # Now hide the login window.
+            # ------------------------------------------------
+
             self.app.withdraw()
 
-            # Open dashboard
-            self.current_dashboard = Dashboard(
-                user_data,
-                logout_callback=(
-                    self.show_login_after_logout
-                )
+            # Some dashboards expose their actual CTk window
+            # through `.window`. Make sure it is visible.
+            dashboard_window = getattr(
+                self.current_dashboard,
+                "window",
+                None
             )
+
+            if dashboard_window is not None:
+                try:
+                    dashboard_window.deiconify()
+                    dashboard_window.lift()
+                    dashboard_window.focus_force()
+                except Exception:
+                    pass
 
         except Exception as error:
 
+            # Never leave the user with a vanished login window.
+            self.app.deiconify()
+            self.app.lift()
+            self.app.focus_force()
+
             self.login_status.configure(
-                text=(
-                    "Database error. "
-                    "Please try again."
-                ),
+                text=f"Unable to open dashboard: {error}",
                 text_color=ERROR
             )
 
-            print(
-                f"Database error: {error}"
-            )
+            print("=" * 60)
+            print("LOGIN / DASHBOARD ERROR")
+            print(repr(error))
+            print("=" * 60)
 
         finally:
 
@@ -892,14 +897,42 @@ class AuthWindow:
                 connection.close()
 
     # ========================================================
-    # RETURN TO LOGIN AFTER LOGOUT
+    # LOGOUT
     # ========================================================
 
-    def show_login_after_logout(self):
+    def logout(self):
+
+        dashboard = self.current_dashboard
+
+        try:
+            if dashboard is not None:
+                dashboard.destroy()
+        except Exception:
+            pass
+
+        try:
+            dashboard_window = getattr(
+                dashboard,
+                "window",
+                None
+            )
+
+            if dashboard_window is not None:
+                try:
+                    dashboard_window.destroy()
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
         self.current_dashboard = None
 
-        self.app.deiconify()
+        try:
+            self.app.deiconify()
+            self.app.lift()
+            self.app.focus_force()
+        except Exception:
+            pass
 
         self.show_login()
 
@@ -929,135 +962,56 @@ class AuthWindow:
             self.signup_confirm.get()
         )
 
-        # Required fields
+        # ----------------------------------------------------
+        # VALIDATION
+        # ----------------------------------------------------
+
         if not full_name:
 
             self.signup_status.configure(
-                text=(
-                    "Please enter your "
-                    "full name."
-                ),
+                text="Please enter your full name.",
                 text_color=ERROR
             )
-
             return
 
         if not username:
 
             self.signup_status.configure(
-                text=(
-                    "Please choose a "
-                    "username."
-                ),
+                text="Please enter a username.",
                 text_color=ERROR
             )
-
             return
 
         if not email:
 
             self.signup_status.configure(
-                text=(
-                    "Please enter your "
-                    "email address."
-                ),
+                text="Please enter your email.",
                 text_color=ERROR
             )
-
             return
 
         if not password:
 
             self.signup_status.configure(
-                text=(
-                    "Please create a "
-                    "password."
-                ),
+                text="Please enter a password.",
                 text_color=ERROR
             )
-
-            return
-
-        if not confirm_password:
-
-            self.signup_status.configure(
-                text=(
-                    "Please confirm "
-                    "your password."
-                ),
-                text_color=ERROR
-            )
-
-            return
-
-        # Username validation
-        if len(username) < 3:
-
-            self.signup_status.configure(
-                text=(
-                    "Username must be "
-                    "at least 3 characters."
-                ),
-                text_color=ERROR
-            )
-
-            return
-
-        if " " in username:
-
-            self.signup_status.configure(
-                text=(
-                    "Username cannot "
-                    "contain spaces."
-                ),
-                text_color=ERROR
-            )
-
-            return
-
-        # Email validation
-        email_pattern = (
-            r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-        )
-
-        if not re.match(
-            email_pattern,
-            email
-        ):
-
-            self.signup_status.configure(
-                text=(
-                    "Please enter a "
-                    "valid email address."
-                ),
-                text_color=ERROR
-            )
-
-            return
-
-        # Password validation
-        if len(password) < 6:
-
-            self.signup_status.configure(
-                text=(
-                    "Password must be "
-                    "at least 6 characters."
-                ),
-                text_color=ERROR
-            )
-
             return
 
         if password != confirm_password:
 
             self.signup_status.configure(
-                text=(
-                    "Passwords do "
-                    "not match."
-                ),
+                text="Passwords do not match.",
                 text_color=ERROR
             )
+            return
 
+        if len(password) < 6:
+
+            self.signup_status.configure(
+                text="Password must be at least 6 characters.",
+                text_color=ERROR
+            )
             return
 
         connection = None
@@ -1068,53 +1022,60 @@ class AuthWindow:
 
             cursor = connection.cursor()
 
-            cursor.execute("""
+            # ------------------------------------------------
+            # CHECK USERNAME
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
                 SELECT id
                 FROM users
                 WHERE username = ?
                 LIMIT 1
-            """, (
-                username,
-            ))
+                """,
+                (username,)
+            )
 
             if cursor.fetchone() is not None:
 
                 self.signup_status.configure(
-                    text=(
-                        "That username "
-                        "is already taken."
-                    ),
+                    text="That username is already taken.",
                     text_color=ERROR
                 )
-
                 return
 
-            cursor.execute("""
+            # ------------------------------------------------
+            # CHECK EMAIL
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
                 SELECT id
                 FROM users
                 WHERE email = ?
                 LIMIT 1
-            """, (
-                email,
-            ))
+                """,
+                (email,)
+            )
 
             if cursor.fetchone() is not None:
 
                 self.signup_status.configure(
-                    text=(
-                        "That email is "
-                        "already registered."
-                    ),
+                    text="That email is already registered.",
                     text_color=ERROR
                 )
-
                 return
+
+            # ------------------------------------------------
+            # CREATE STUDENT ACCOUNT
+            # ------------------------------------------------
 
             password_hash = hash_password(
                 password
             )
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO users (
                     username,
                     password_hash,
@@ -1124,22 +1085,23 @@ class AuthWindow:
                     is_active
                 )
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                username,
-                password_hash,
-                full_name,
-                email,
-                "student",
-                1
-            ))
+                """,
+                (
+                    username,
+                    password_hash,
+                    full_name,
+                    email,
+                    "student",
+                    1
+                )
+            )
 
             connection.commit()
 
             self.signup_status.configure(
                 text=(
-                    "Account created "
-                    "successfully! "
-                    "You can now sign in."
+                    "Account created successfully! "
+                    "You can now sign in as a Student."
                 ),
                 text_color=SUCCESS
             )
@@ -1169,17 +1131,10 @@ class AuthWindow:
                 "end"
             )
 
-            print(
-                "ACCOUNT CREATED SUCCESSFULLY"
-            )
-
         except Exception as error:
 
             self.signup_status.configure(
-                text=(
-                    "Database error. "
-                    "Please try again."
-                ),
+                text="Database error. Please try again.",
                 text_color=ERROR
             )
 

@@ -1,17 +1,18 @@
 import customtkinter as ctk
 
-
-from database.database import (
-    get_connection,
-    setup_database
-)
-
+from database.database import setup_database
 
 from ui.animations import (
     animate_width,
     add_hover_effect,
     add_press_effect
 )
+
+from ui.pages.student_info import StudentInfoPage
+from ui.pages.logbook import LogbookPage
+from ui.pages.attendance import AttendancePage
+from ui.pages.placement import PlacementPage
+from ui.pages.evaluation import EvaluationPage
 
 
 # ============================================================
@@ -26,10 +27,11 @@ BLUE_HOVER = "#2469D8"
 
 WHITE = "#FFFFFF"
 
+BACKGROUND = "#F4F7FB"
+
 TEXT = "#102F4F"
 TEXT_LIGHT = "#64748B"
 
-INPUT_BG = "#F4F7FB"
 BORDER = "#DCE4EE"
 
 SUCCESS = "#16A34A"
@@ -51,10 +53,6 @@ class Dashboard:
         self.user = user
         self.logout_callback = logout_callback
 
-        # Controls whether My Information is in edit mode
-        self.editing_information = False
-
-        # Make sure the shared database is ready
         setup_database()
 
         self.app = ctk.CTkToplevel()
@@ -72,6 +70,10 @@ class Dashboard:
             600
         )
 
+        self.app.configure(
+            fg_color=BACKGROUND
+        )
+
         self.app.protocol(
             "WM_DELETE_WINDOW",
             self.logout
@@ -79,7 +81,6 @@ class Dashboard:
 
         self.create_sidebar()
         self.create_main_area()
-
 
     # ========================================================
     # SIDEBAR
@@ -101,17 +102,9 @@ class Dashboard:
 
         self.sidebar.pack_propagate(False)
 
-        # ----------------------------------------------------
-        # START COLLAPSED
-        # ----------------------------------------------------
-
         self.sidebar.configure(
             width=0
         )
-
-        # ----------------------------------------------------
-        # SIDEBAR CONTENT
-        # ----------------------------------------------------
 
         title = ctk.CTkLabel(
             self.sidebar,
@@ -157,8 +150,14 @@ class Dashboard:
         logout_button = ctk.CTkButton(
             self.sidebar,
             text="Logout",
-            fg_color="#DC2626",
+            height=40,
+            fg_color=ERROR,
             hover_color="#B91C1C",
+            text_color=WHITE,
+            font=ctk.CTkFont(
+                size=13,
+                weight="bold"
+            ),
             command=self.logout
         )
 
@@ -169,16 +168,11 @@ class Dashboard:
             fill="x"
         )
 
-        # Press animation
         add_press_effect(
             logout_button,
-            "#DC2626",
+            ERROR,
             "#991B1B"
         )
-
-        # ----------------------------------------------------
-        # SIDEBAR ENTRANCE ANIMATION
-        # ----------------------------------------------------
 
         self.app.after(
             100,
@@ -190,7 +184,6 @@ class Dashboard:
                 steps=28
             )
         )
-
 
     # ========================================================
     # MENU BUTTONS
@@ -250,10 +243,13 @@ class Dashboard:
                 height=40,
                 fg_color="transparent",
                 hover_color=NAVY_LIGHT,
+                text_color=WHITE,
                 anchor="w",
-                command=lambda name=item: (
+                font=ctk.CTkFont(
+                    size=13
+                ),
+                command=lambda name=item:
                     self.show_page(name)
-                )
             )
 
             button.pack(
@@ -262,16 +258,11 @@ class Dashboard:
                 fill="x"
             )
 
-            # ------------------------------------------------
-            # HOVER ANIMATION
-            # ------------------------------------------------
-
             add_hover_effect(
                 button,
                 "transparent",
                 NAVY_LIGHT
             )
-
 
     # ========================================================
     # MAIN AREA
@@ -281,7 +272,7 @@ class Dashboard:
 
         self.main_area = ctk.CTkFrame(
             self.app,
-            fg_color="#F4F7FB",
+            fg_color=BACKGROUND,
             corner_radius=0
         )
 
@@ -295,7 +286,6 @@ class Dashboard:
             "Dashboard"
         )
 
-
     # ========================================================
     # PAGE ROUTER
     # ========================================================
@@ -303,24 +293,416 @@ class Dashboard:
     def show_page(self, page_name):
 
         for widget in self.main_area.winfo_children():
-
             widget.destroy()
+
+        # ----------------------------------------------------
+        # STUDENT INFORMATION
+        # ----------------------------------------------------
 
         if page_name == "My Information":
 
-            self.editing_information = False
-
-            self.show_student_information()
-
-        else:
-
-            self.show_placeholder(
-                page_name
+            page = StudentInfoPage(
+                self.main_area,
+                self.user
             )
 
+            page.pack(
+                fill="both",
+                expand=True
+            )
+
+            return
+
+        # ----------------------------------------------------
+        # PLACEMENT
+        # ----------------------------------------------------
+
+        if page_name == "Placement":
+
+            page = PlacementPage(
+                self.main_area,
+                self.user
+            )
+
+            page.pack(
+                fill="both",
+                expand=True
+            )
+
+            return
+
+        # ----------------------------------------------------
+        # DIGITAL LOGBOOK
+        # ----------------------------------------------------
+
+        if page_name == "Digital Logbook":
+
+            page = LogbookPage(
+                self.main_area,
+                self.user
+            )
+
+            page.pack(
+                fill="both",
+                expand=True
+            )
+
+            return
+
+        # ----------------------------------------------------
+        # ATTENDANCE
+        # ----------------------------------------------------
+
+        if page_name == "Attendance":
+
+            page = AttendancePage(
+                self.main_area,
+                self.user
+            )
+
+            page.pack(
+                fill="both",
+                expand=True
+            )
+
+            return
+
+        # ----------------------------------------------------
+        # EVALUATION / SUPERVISOR FEEDBACK
+        # ----------------------------------------------------
+
+        if page_name == "Evaluation":
+
+            page = EvaluationPage(
+                self.main_area,
+                self.user
+            )
+
+            page.pack(
+                fill="both",
+                expand=True
+            )
+
+            return
+
+        # ----------------------------------------------------
+        # DASHBOARD
+        # ----------------------------------------------------
+
+        if page_name == "Dashboard":
+
+            self.show_dashboard_home()
+
+            return
+
+        # ----------------------------------------------------
+        # OTHER MODULES
+        # ----------------------------------------------------
+
+        self.show_placeholder(
+            page_name
+        )
 
     # ========================================================
-    # GENERAL PLACEHOLDER
+    # DASHBOARD HOME
+    # ========================================================
+
+    def show_dashboard_home(self):
+
+        header = ctk.CTkFrame(
+            self.main_area,
+            fg_color="transparent"
+        )
+
+        header.pack(
+            fill="x",
+            padx=40,
+            pady=(35, 20)
+        )
+
+        title = ctk.CTkLabel(
+            header,
+            text="Dashboard",
+            font=ctk.CTkFont(
+                size=30,
+                weight="bold"
+            ),
+            text_color=TEXT
+        )
+
+        title.pack(
+            anchor="w"
+        )
+
+        welcome = ctk.CTkLabel(
+            header,
+            text=(
+                f"Welcome back, "
+                f"{self.user.get('full_name', 'User')}!"
+            ),
+            font=ctk.CTkFont(
+                size=15
+            ),
+            text_color=TEXT_LIGHT
+        )
+
+        welcome.pack(
+            anchor="w",
+            pady=(5, 0)
+        )
+
+        stats = ctk.CTkFrame(
+            self.main_area,
+            fg_color="transparent"
+        )
+
+        stats.pack(
+            fill="x",
+            padx=40,
+            pady=(0, 20)
+        )
+
+        for column in range(3):
+
+            stats.grid_columnconfigure(
+                column,
+                weight=1
+            )
+
+        self.create_stat_card(
+            stats,
+            0,
+            "SIWES Status",
+            "Active",
+            SUCCESS
+        )
+
+        self.create_stat_card(
+            stats,
+            1,
+            "Attendance",
+            "—",
+            BLUE
+        )
+
+        self.create_stat_card(
+            stats,
+            2,
+            "Logbook",
+            "—",
+            "#8B5CF6"
+        )
+
+        card = ctk.CTkFrame(
+            self.main_area,
+            fg_color=WHITE,
+            corner_radius=12,
+            border_width=1,
+            border_color=BORDER
+        )
+
+        card.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=(0, 40)
+        )
+
+        card_title = ctk.CTkLabel(
+            card,
+            text="SIWES Management System",
+            font=ctk.CTkFont(
+                size=21,
+                weight="bold"
+            ),
+            text_color=TEXT
+        )
+
+        card_title.pack(
+            anchor="w",
+            padx=30,
+            pady=(30, 5)
+        )
+
+        card_description = ctk.CTkLabel(
+            card,
+            text=(
+                "Use the navigation menu to manage "
+                "your SIWES activities, placement, "
+                "attendance, logbook and evaluation."
+            ),
+            font=ctk.CTkFont(
+                size=14
+            ),
+            text_color=TEXT_LIGHT,
+            justify="left"
+        )
+
+        card_description.pack(
+            anchor="w",
+            padx=30,
+            pady=(0, 25)
+        )
+
+        actions = ctk.CTkFrame(
+            card,
+            fg_color="transparent"
+        )
+
+        actions.pack(
+            fill="x",
+            padx=30
+        )
+
+        role = str(
+            self.user.get(
+                "role",
+                "student"
+            )
+        ).lower()
+
+        if role == "student":
+
+            self.create_action_button(
+                actions,
+                "My Information",
+                lambda: self.show_page(
+                    "My Information"
+                )
+            )
+
+            self.create_action_button(
+                actions,
+                "Placement",
+                lambda: self.show_page(
+                    "Placement"
+                )
+            )
+
+            self.create_action_button(
+                actions,
+                "Attendance",
+                lambda: self.show_page(
+                    "Attendance"
+                )
+            )
+
+            self.create_action_button(
+                actions,
+                "Digital Logbook",
+                lambda: self.show_page(
+                    "Digital Logbook"
+                )
+            )
+
+            self.create_action_button(
+                actions,
+                "Evaluation",
+                lambda: self.show_page(
+                    "Evaluation"
+                )
+            )
+
+    # ========================================================
+    # STAT CARD
+    # ========================================================
+
+    def create_stat_card(
+        self,
+        parent,
+        column,
+        title,
+        value,
+        value_color
+    ):
+
+        card = ctk.CTkFrame(
+            parent,
+            fg_color=WHITE,
+            corner_radius=12,
+            border_width=1,
+            border_color=BORDER
+        )
+
+        card.grid(
+            row=0,
+            column=column,
+            sticky="ew",
+            padx=6
+        )
+
+        title_label = ctk.CTkLabel(
+            card,
+            text=title,
+            font=ctk.CTkFont(
+                size=13,
+                weight="bold"
+            ),
+            text_color=TEXT_LIGHT
+        )
+
+        title_label.pack(
+            anchor="w",
+            padx=20,
+            pady=(18, 2)
+        )
+
+        value_label = ctk.CTkLabel(
+            card,
+            text=value,
+            font=ctk.CTkFont(
+                size=25,
+                weight="bold"
+            ),
+            text_color=value_color
+        )
+
+        value_label.pack(
+            anchor="w",
+            padx=20,
+            pady=(0, 18)
+        )
+
+    # ========================================================
+    # QUICK ACTION BUTTON
+    # ========================================================
+
+    def create_action_button(
+        self,
+        parent,
+        text,
+        command
+    ):
+
+        button = ctk.CTkButton(
+            parent,
+            text=text,
+            width=160,
+            height=42,
+            corner_radius=8,
+            fg_color=BLUE,
+            hover_color=BLUE_HOVER,
+            text_color=WHITE,
+            font=ctk.CTkFont(
+                size=13,
+                weight="bold"
+            ),
+            command=command
+        )
+
+        button.pack(
+            side="left",
+            padx=(0, 10)
+        )
+
+        add_press_effect(
+            button,
+            BLUE,
+            "#1D4ED8"
+        )
+
+    # ========================================================
+    # PLACEHOLDER
     # ========================================================
 
     def show_placeholder(
@@ -328,8 +710,19 @@ class Dashboard:
         page_name
     ):
 
-        title = ctk.CTkLabel(
+        header = ctk.CTkFrame(
             self.main_area,
+            fg_color="transparent"
+        )
+
+        header.pack(
+            fill="x",
+            padx=40,
+            pady=(35, 20)
+        )
+
+        title = ctk.CTkLabel(
+            header,
             text=page_name,
             font=ctk.CTkFont(
                 size=30,
@@ -339,85 +732,13 @@ class Dashboard:
         )
 
         title.pack(
-            anchor="w",
-            padx=40,
-            pady=(40, 10)
-        )
-
-        welcome = ctk.CTkLabel(
-            self.main_area,
-            text=(
-                f"Welcome, "
-                f"{self.user.get('full_name', 'User')}!"
-            ),
-            font=ctk.CTkFont(
-                size=17
-            ),
-            text_color=TEXT_LIGHT
-        )
-
-        welcome.pack(
-            anchor="w",
-            padx=40
-        )
-
-        info = ctk.CTkFrame(
-            self.main_area,
-            fg_color=WHITE,
-            corner_radius=12
-        )
-
-        info.pack(
-            padx=40,
-            pady=30,
-            fill="x"
-        )
-
-        message = ctk.CTkLabel(
-            info,
-            text=(
-                f"{page_name} module "
-                "is ready to be connected."
-            ),
-            font=ctk.CTkFont(
-                size=16
-            ),
-            text_color=TEXT
-        )
-
-        message.pack(
-            padx=30,
-            pady=30
-        )
-
-
-    # ========================================================
-    # STUDENT INFORMATION PAGE
-    # ========================================================
-
-    def show_student_information(self):
-
-        title = ctk.CTkLabel(
-            self.main_area,
-            text="My Information",
-            font=ctk.CTkFont(
-                size=30,
-                weight="bold"
-            ),
-            text_color=TEXT
-        )
-
-        title.pack(
-            anchor="w",
-            padx=40,
-            pady=(25, 5)
+            anchor="w"
         )
 
         subtitle = ctk.CTkLabel(
-            self.main_area,
+            header,
             text=(
-                "View and manage your personal "
-                "and school information."
+                f"{page_name} management module."
             ),
             font=ctk.CTkFont(
                 size=14
@@ -427,900 +748,69 @@ class Dashboard:
 
         subtitle.pack(
             anchor="w",
-            padx=40,
-            pady=(0, 12)
+            pady=(5, 0)
         )
 
-        # ====================================================
-        # ACTION BUTTONS
-        # ====================================================
-
-        button_bar = ctk.CTkFrame(
-            self.main_area,
-            fg_color="transparent"
-        )
-
-        button_bar.pack(
-            fill="x",
-            padx=40,
-            pady=(0, 10)
-        )
-
-        if not self.editing_information:
-
-            edit_button = ctk.CTkButton(
-                button_bar,
-                text="Edit Information",
-                width=160,
-                height=40,
-                fg_color=BLUE,
-                hover_color=BLUE_HOVER,
-                command=self.enable_information_editing
-            )
-
-            edit_button.pack(
-                side="right"
-            )
-
-            add_press_effect(
-                edit_button,
-                BLUE,
-                "#1D4ED8"
-            )
-
-        else:
-
-            save_button = ctk.CTkButton(
-                button_bar,
-                text="Save Changes",
-                width=150,
-                height=40,
-                fg_color=SUCCESS,
-                hover_color="#15803D",
-                command=self.save_student_information
-            )
-
-            save_button.pack(
-                side="right",
-                padx=(8, 0)
-            )
-
-            add_press_effect(
-                save_button,
-                SUCCESS,
-                "#166534"
-            )
-
-            cancel_button = ctk.CTkButton(
-                button_bar,
-                text="Cancel",
-                width=100,
-                height=40,
-                fg_color="#64748B",
-                hover_color="#475569",
-                command=self.cancel_information_edit
-            )
-
-            cancel_button.pack(
-                side="right"
-            )
-
-            add_press_effect(
-                cancel_button,
-                "#64748B",
-                "#334155"
-            )
-
-        # ====================================================
-        # FORM CONTAINER
-        # ====================================================
-
-        form = ctk.CTkScrollableFrame(
+        card = ctk.CTkFrame(
             self.main_area,
             fg_color=WHITE,
-            corner_radius=12
-        )
-
-        form.pack(
-            padx=40,
-            pady=5,
-            fill="both",
-            expand=True
-        )
-
-        form.grid_columnconfigure(
-            0,
-            weight=1
-        )
-
-        form.grid_columnconfigure(
-            1,
-            weight=1
-        )
-
-        # ====================================================
-        # PERSONAL INFORMATION
-        # ====================================================
-
-        personal_title = ctk.CTkLabel(
-            form,
-            text="Personal Information",
-            font=ctk.CTkFont(
-                size=20,
-                weight="bold"
-            ),
-            text_color=TEXT
-        )
-
-        personal_title.grid(
-            row=0,
-            column=0,
-            columnspan=2,
-            sticky="w",
-            padx=25,
-            pady=(20, 5)
-        )
-
-        personal_subtitle = ctk.CTkLabel(
-            form,
-            text=(
-                "Basic contact and identity information."
-            ),
-            font=ctk.CTkFont(
-                size=13
-            ),
-            text_color=TEXT_LIGHT
-        )
-
-        personal_subtitle.grid(
-            row=1,
-            column=0,
-            columnspan=2,
-            sticky="w",
-            padx=25,
-            pady=(0, 10)
-        )
-
-        self.info_full_name = self.create_form_input(
-            form,
-            "Full Name",
-            2,
-            0
-        )
-
-        self.info_email = self.create_form_input(
-            form,
-            "Email",
-            2,
-            1
-        )
-
-        self.info_phone = self.create_form_input(
-            form,
-            "Phone Number",
-            3,
-            0
-        )
-
-        self.info_student_id = self.create_form_input(
-            form,
-            "Student / Matric Number",
-            3,
-            1
-        )
-
-        # ====================================================
-        # SCHOOL INFORMATION
-        # ====================================================
-
-        school_title = ctk.CTkLabel(
-            form,
-            text="School Information",
-            font=ctk.CTkFont(
-                size=20,
-                weight="bold"
-            ),
-            text_color=TEXT
-        )
-
-        school_title.grid(
-            row=4,
-            column=0,
-            columnspan=2,
-            sticky="w",
-            padx=25,
-            pady=(25, 5)
-        )
-
-        school_subtitle = ctk.CTkLabel(
-            form,
-            text=(
-                "Academic information used "
-                "throughout the SIWES system."
-            ),
-            font=ctk.CTkFont(
-                size=13
-            ),
-            text_color=TEXT_LIGHT
-        )
-
-        school_subtitle.grid(
-            row=5,
-            column=0,
-            columnspan=2,
-            sticky="w",
-            padx=25,
-            pady=(0, 10)
-        )
-
-        self.info_institution = self.create_form_input(
-            form,
-            "School / Institution",
-            6,
-            0
-        )
-
-        self.info_faculty = self.create_form_input(
-            form,
-            "Faculty",
-            6,
-            1
-        )
-
-        self.info_department = self.create_form_input(
-            form,
-            "Department",
-            7,
-            0
-        )
-
-        self.info_programme = self.create_form_input(
-            form,
-            "Programme / Course",
-            7,
-            1
-        )
-
-        self.info_level = self.create_form_input(
-            form,
-            "Level",
-            8,
-            0
-        )
-
-        self.info_session = self.create_form_input(
-            form,
-            "Academic Session",
-            8,
-            1
-        )
-
-        # ====================================================
-        # STATUS
-        # ====================================================
-
-        self.info_status = ctk.CTkLabel(
-            form,
-            text="",
-            font=ctk.CTkFont(
-                size=13
-            ),
-            text_color=TEXT_LIGHT
-        )
-
-        self.info_status.grid(
-            row=9,
-            column=0,
-            columnspan=2,
-            sticky="w",
-            padx=25,
-            pady=(20, 30)
-        )
-
-        # Load existing information
-        self.load_student_information()
-
-
-    # ========================================================
-    # FORM INPUT
-    # ========================================================
-
-    def create_form_input(
-        self,
-        parent,
-        label_text,
-        row,
-        column
-    ):
-
-        frame = ctk.CTkFrame(
-            parent,
-            fg_color="transparent"
-        )
-
-        frame.grid(
-            row=row,
-            column=column,
-            sticky="ew",
-            padx=25,
-            pady=8
-        )
-
-        label = ctk.CTkLabel(
-            frame,
-            text=label_text,
-            font=ctk.CTkFont(
-                size=13,
-                weight="bold"
-            ),
-            text_color=TEXT
-        )
-
-        label.pack(
-            anchor="w",
-            pady=(0, 6)
-        )
-
-        entry = ctk.CTkEntry(
-            frame,
-            height=45,
-            fg_color=WHITE,
-            text_color=TEXT,
-            placeholder_text_color="#94A3B8",
-            border_color=BORDER,
+            corner_radius=12,
             border_width=1,
-            corner_radius=8
+            border_color=BORDER
         )
 
-        entry.pack(
-            fill="x"
+        card.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=(0, 40)
         )
 
-        return entry
-
-
-    # ========================================================
-    # EDIT MODE
-    # ========================================================
-
-    def set_information_editable(
-        self,
-        editable
-    ):
-
-        state = (
-            "normal"
-            if editable
-            else "disabled"
+        icon = ctk.CTkLabel(
+            card,
+            text="⚙",
+            font=ctk.CTkFont(
+                size=42
+            ),
+            text_color=BLUE
         )
 
-        entries = [
-            self.info_full_name,
-            self.info_email,
-            self.info_phone,
-            self.info_student_id,
-            self.info_institution,
-            self.info_faculty,
-            self.info_department,
-            self.info_programme,
-            self.info_level,
-            self.info_session
-        ]
-
-        for entry in entries:
-
-            entry.configure(
-                state=state,
-                fg_color=(
-                    WHITE
-                    if editable
-                    else INPUT_BG
-                )
-            )
-
-
-    def enable_information_editing(self):
-
-        self.editing_information = True
-
-        self.show_student_information()
-
-
-    def cancel_information_edit(self):
-
-        self.editing_information = False
-
-        self.show_student_information()
-
-
-    # ========================================================
-    # GET USER EMAIL
-    # ========================================================
-
-    def get_user_email(self):
-
-        connection = None
-
-        try:
-
-            connection = get_connection()
-
-            cursor = connection.cursor()
-
-            cursor.execute(
-                """
-                SELECT email
-                FROM users
-                WHERE id = ?
-                LIMIT 1
-                """,
-                (
-                    self.user["id"],
-                )
-            )
-
-            result = cursor.fetchone()
-
-            if result:
-                return result[0]
-
-        except Exception as error:
-
-            print(
-                f"Error getting email: {error}"
-            )
-
-        finally:
-
-            if connection:
-                connection.close()
-
-        return None
-
-
-    # ========================================================
-    # LOAD STUDENT INFORMATION
-    # ========================================================
-
-    def load_student_information(self):
-
-        email = self.get_user_email()
-
-        if not email:
-
-            self.info_status.configure(
-                text=(
-                    "Your account does not "
-                    "have an email address."
-                ),
-                text_color=ERROR
-            )
-
-            self.set_information_editable(
-                self.editing_information
-            )
-
-            return
-
-        connection = None
-
-        try:
-
-            connection = get_connection()
-
-            cursor = connection.cursor()
-
-            cursor.execute(
-                """
-                SELECT
-                    full_name,
-                    email,
-                    phone,
-                    student_id_number,
-                    institution,
-                    faculty,
-                    department,
-                    programme,
-                    level,
-                    academic_session
-                FROM students
-                WHERE email = ?
-                LIMIT 1
-                """,
-                (
-                    email,
-                )
-            )
-
-            student = cursor.fetchone()
-
-            if student:
-
-                (
-                    full_name,
-                    student_email,
-                    phone,
-                    student_id_number,
-                    institution,
-                    faculty,
-                    department,
-                    programme,
-                    level,
-                    academic_session
-                ) = student
-
-                values = [
-                    (
-                        self.info_full_name,
-                        full_name
-                    ),
-                    (
-                        self.info_email,
-                        student_email
-                    ),
-                    (
-                        self.info_phone,
-                        phone
-                    ),
-                    (
-                        self.info_student_id,
-                        student_id_number
-                    ),
-                    (
-                        self.info_institution,
-                        institution
-                    ),
-                    (
-                        self.info_faculty,
-                        faculty
-                    ),
-                    (
-                        self.info_department,
-                        department
-                    ),
-                    (
-                        self.info_programme,
-                        programme
-                    ),
-                    (
-                        self.info_level,
-                        level
-                    ),
-                    (
-                        self.info_session,
-                        academic_session
-                    )
-                ]
-
-                for entry, value in values:
-
-                    entry.insert(
-                        0,
-                        value or ""
-                    )
-
-                self.info_status.configure(
-                    text=(
-                        "Your information "
-                        "has been loaded."
-                    ),
-                    text_color=SUCCESS
-                )
-
-            else:
-
-                self.info_full_name.insert(
-                    0,
-                    self.user.get(
-                        "full_name",
-                        ""
-                    )
-                )
-
-                self.info_email.insert(
-                    0,
-                    email
-                )
-
-                self.info_status.configure(
-                    text=(
-                        "No student profile found. "
-                        "Complete your information "
-                        "and save."
-                    ),
-                    text_color=TEXT_LIGHT
-                )
-
-        except Exception as error:
-
-            self.info_status.configure(
-                text=(
-                    "Unable to load student "
-                    "information."
-                ),
-                text_color=ERROR
-            )
-
-            print(
-                f"Database error: {error}"
-            )
-
-        finally:
-
-            if connection:
-                connection.close()
-
-        self.set_information_editable(
-            self.editing_information
+        icon.pack(
+            pady=(80, 15)
         )
 
-
-    # ========================================================
-    # SAVE STUDENT INFORMATION
-    # ========================================================
-
-    def save_student_information(self):
-
-        full_name = (
-            self.info_full_name.get().strip()
+        message = ctk.CTkLabel(
+            card,
+            text=(
+                f"{page_name} module "
+                "is ready to be connected."
+            ),
+            font=ctk.CTkFont(
+                size=18,
+                weight="bold"
+            ),
+            text_color=TEXT
         )
 
-        email = (
-            self.info_email.get().strip()
+        message.pack(
+            pady=5
         )
 
-        phone = (
-            self.info_phone.get().strip()
+        description = ctk.CTkLabel(
+            card,
+            text=(
+                "This page will be connected "
+                "to the corresponding module."
+            ),
+            font=ctk.CTkFont(
+                size=13
+            ),
+            text_color=TEXT_LIGHT
         )
 
-        student_id_number = (
-            self.info_student_id.get().strip()
+        description.pack(
+            pady=5
         )
-
-        institution = (
-            self.info_institution.get().strip()
-        )
-
-        faculty = (
-            self.info_faculty.get().strip()
-        )
-
-        department = (
-            self.info_department.get().strip()
-        )
-
-        programme = (
-            self.info_programme.get().strip()
-        )
-
-        level = (
-            self.info_level.get().strip()
-        )
-
-        academic_session = (
-            self.info_session.get().strip()
-        )
-
-        # ====================================================
-        # VALIDATION
-        # ====================================================
-
-        if not full_name:
-
-            self.info_status.configure(
-                text="Full name is required.",
-                text_color=ERROR
-            )
-
-            return
-
-        if not email:
-
-            self.info_status.configure(
-                text="Email is required.",
-                text_color=ERROR
-            )
-
-            return
-
-        if not department:
-
-            self.info_status.configure(
-                text="Department is required.",
-                text_color=ERROR
-            )
-
-            return
-
-        if not level:
-
-            self.info_status.configure(
-                text="Level is required.",
-                text_color=ERROR
-            )
-
-            return
-
-        connection = None
-
-        try:
-
-            connection = get_connection()
-
-            cursor = connection.cursor()
-
-            current_email = (
-                self.get_user_email()
-            )
-
-            # ------------------------------------------------
-            # FIND EXISTING PROFILE
-            # ------------------------------------------------
-
-            cursor.execute(
-                """
-                SELECT id
-                FROM students
-                WHERE email = ?
-                LIMIT 1
-                """,
-                (
-                    current_email,
-                )
-            )
-
-            existing = cursor.fetchone()
-
-            # ------------------------------------------------
-            # UPDATE
-            # ------------------------------------------------
-
-            if existing:
-
-                cursor.execute(
-                    """
-                    UPDATE students
-                    SET
-                        full_name = ?,
-                        email = ?,
-                        phone = ?,
-                        student_id_number = ?,
-                        institution = ?,
-                        faculty = ?,
-                        department = ?,
-                        programme = ?,
-                        level = ?,
-                        academic_session = ?
-                    WHERE id = ?
-                    """,
-                    (
-                        full_name,
-                        email,
-                        phone,
-                        student_id_number,
-                        institution,
-                        faculty,
-                        department,
-                        programme,
-                        level,
-                        academic_session,
-                        existing[0]
-                    )
-                )
-
-            # ------------------------------------------------
-            # INSERT
-            # ------------------------------------------------
-
-            else:
-
-                cursor.execute(
-                    """
-                    INSERT INTO students (
-                        full_name,
-                        email,
-                        phone,
-                        student_id_number,
-                        institution,
-                        faculty,
-                        department,
-                        programme,
-                        level,
-                        academic_session
-                    )
-                    VALUES (
-                        ?, ?, ?, ?, ?, ?,
-                        ?, ?, ?, ?
-                    )
-                    """,
-                    (
-                        full_name,
-                        email,
-                        phone,
-                        student_id_number,
-                        institution,
-                        faculty,
-                        department,
-                        programme,
-                        level,
-                        academic_session
-                    )
-                )
-
-            # ------------------------------------------------
-            # KEEP USER ACCOUNT SYNCHRONIZED
-            # ------------------------------------------------
-
-            cursor.execute(
-                """
-                UPDATE users
-                SET
-                    full_name = ?,
-                    email = ?
-                WHERE id = ?
-                """,
-                (
-                    full_name,
-                    email,
-                    self.user["id"]
-                )
-            )
-
-            connection.commit()
-
-            # Update local user object
-            self.user["full_name"] = full_name
-            self.user["email"] = email
-
-            # Update sidebar
-            role = str(
-                self.user.get(
-                    "role",
-                    "student"
-                )
-            ).capitalize()
-
-            self.user_label.configure(
-                text=(
-                    f"{full_name}\n"
-                    f"{role}"
-                )
-            )
-
-            # Return to view mode
-            self.editing_information = False
-
-            self.show_student_information()
-
-            self.info_status.configure(
-                text=(
-                    "Student information "
-                    "saved successfully."
-                ),
-                text_color=SUCCESS
-            )
-
-        except Exception as error:
-
-            if connection:
-                connection.rollback()
-
-            self.info_status.configure(
-                text=(
-                    "Could not save information."
-                ),
-                text_color=ERROR
-            )
-
-            print(
-                f"Database error: {error}"
-            )
-
-        finally:
-
-            if connection:
-                connection.close()
-
 
     # ========================================================
     # LOGOUT
@@ -1338,7 +828,7 @@ class Dashboard:
 
 
 # ============================================================
-# TEST DASHBOARD
+# TEST
 # ============================================================
 
 if __name__ == "__main__":
@@ -1347,7 +837,8 @@ if __name__ == "__main__":
         "id": 1,
         "username": "test",
         "full_name": "Test Student",
-        "role": "student"
+        "role": "student",
+        "email": "student@test.com"
     }
 
     dashboard = Dashboard(
